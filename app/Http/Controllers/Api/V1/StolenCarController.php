@@ -29,6 +29,14 @@ class StolenCarController extends Controller
             $result = $result->sort($request->all());
         }
 
+        if ($filter = $request->get('filter')) {
+            $result->where(function ($builder) use ($filter) {
+                $builder->where('gov_number', 'LIKE', "%{$filter}%")
+                    ->orWhere('user_name', 'LIKE', "%{$filter}%")
+                    ->orWhere('vin_code', 'LIKE', "%{$filter}%");
+            });
+        }
+
         $result->orderByDesc('id');
 
         $result = $result->paginate($this->getLimit($request))->appends($request->query());
