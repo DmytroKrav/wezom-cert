@@ -14,3 +14,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::resource('stolen-cars', 'StolenCarController')->except('edit', 'create');
+Route::get('stolen-cars', 'StolenCarController@exportWithFilters');

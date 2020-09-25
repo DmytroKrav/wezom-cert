@@ -13,10 +13,12 @@ class DeleteCarRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $id = $this->route('id');
+        $validator->after(function ($validator) {
+            $id = $this->route('id');
 
-        if(!$id || !StolenCar::whereId($id)->exists()) {
-            $validator->errors()->add('id', 'This record isn exists');
-        }
+            if (!$id || !StolenCar::whereId($id)->exists()) {
+                $validator->errors()->add('id', 'This record isn exists');
+            }
+        });
     }
 }

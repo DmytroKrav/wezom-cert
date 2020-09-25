@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exports\StolenCarExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\AddCarRequest;
 use App\Http\Requests\Api\V1\UpdateCarRequest;
@@ -9,6 +10,7 @@ use App\Http\Resources\Api\V1\CarResource;
 use App\Http\Resources\Api\V1\StolenCarsResource;
 use App\Models\StolenCar;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Excel;
 
 class StolenCarController extends Controller
 {
@@ -28,23 +30,7 @@ class StolenCarController extends Controller
      */
     public function index(Request $request)
     {
-        $result = $this->model::query();
-
-        if (method_exists($this->model, 'scopeSort')) {
-            $result = $result->sort($request->all());
-        }
-
-        if ($filter = $request->get('filter')) {
-            $result->where(function ($builder) use ($filter) {
-                $builder->where('gov_number', 'LIKE', "%{$filter}%")
-                    ->orWhere('user_name', 'LIKE', "%{$filter}%")
-                    ->orWhere('vin_code', 'LIKE', "%{$filter}%");
-            });
-        }
-
-        $result->orderByDesc('id');
-
-        $result = $result->paginate($this->getLimit($request))->appends($request->query());
+        $result = $this->getIndexQuery($request)->paginate($this->getLimit($request))->appends($request->query());
 
         return new StolenCarsResource($result);
     }
@@ -64,9 +50,10 @@ class StolenCarController extends Controller
      */
     public function update(UpdateCarRequest $request)
     {
-        StolenCar::find($request->get('id'))->update($request->only('color_hex', 'gov_number', 'vin_code', 'user_name'));
+        StolenCar::find($request->get('id'))
+            ->update($request->only('color_hex', 'gov_number', 'vin_code', 'user_name'));
 
-        return response()->json(['success' => true]);
+        return $this->successResponse();
     }
 
     /**
@@ -77,7 +64,17 @@ class StolenCarController extends Controller
     {
         StolenCar::find($request->get('id'))->delete();
 
-        return response()->json(['success' => true]);
+        return $this->successResponse();
+    }
+
+    public function exportWithFilters(Request $request)
+    {
+        $data = $this->getIndexQuery($request)->get();
+
+        $filename = time() . 'cars.xls';
+        Excel::store(new StolenCarExport($data), $filename);
+
+        return $this->successResponse(['file_path' => 'path to file in storage']);
     }
 
     /**
@@ -91,5 +88,35 @@ class StolenCarController extends Controller
         }
 
         return $this->model->defaultLimit;
+    }
+
+    private function getIndexQuery(Request $request)
+    {
+        $result = $this->model::query();
+
+        if (method_exists($this->model, 'scopeSort')) {
+            $result = $result->sort($request->all());
+        }
+
+        if ($filter = $request->get('filter')) {
+            $result->where(function ($builder) use ($filter) {
+                $builder->where('gov_number', 'LIKE', "%{$filter}%")
+                    ->orWhere('user_name', 'LIKE', "%{$filter}%")
+                    ->orWhere('vin_code', 'LIKE', "%{$filter}%");
+            });
+        }
+
+        $result->orderByDesc('id');
+
+        return $result;
+    }
+
+    /**
+     * @var $data array
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function successResponse(array $data = [])
+    {
+        return response()->json(array_merge(['success' => true], $data));
     }
 }
