@@ -13,4 +13,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::resource('stolen-cars', 'StolenCarController')->except('index');
+Route::resource('stolen-cars', 'StolenCarController');

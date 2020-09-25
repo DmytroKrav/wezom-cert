@@ -5,9 +5,14 @@ namespace App\Models;
 use App\Http\Requests\Api\V1\AddCarRequest;
 use App\Http\Services\VpicService;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Sortable;
 
 class StolenCar extends Model
 {
+    use Sortable;
+
+    public $defaultLimit = 10;
+
     /**
      * The attributes that are mass assignable.
      *

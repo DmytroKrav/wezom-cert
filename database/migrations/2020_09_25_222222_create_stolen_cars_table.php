@@ -19,11 +19,14 @@ class CreateStolenCarsTable extends Migration
             $table->string('gov_number')->unique()->index();
             $table->string('color_hex');
             $table->string('vin_code')->index();
-            $table->string('maker_id');
-            $table->string('model_id');
+            $table->string('maker_id')->nullable();
+            $table->string('model_id')->nullable();
             $table->year('year');
 
             $table->timestamps();
+
+            $table->foreign('maker_id')->references('id')->on('car_makers')->onDelete('set null');
+            $table->foreign('model_id')->references('id')->on('car_models')->onDelete('set null');
         });
     }
 
