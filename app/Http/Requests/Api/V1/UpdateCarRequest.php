@@ -17,16 +17,24 @@ class UpdateCarRequest extends FormRequest
             'user_name' => 'string|max:255',
             'gov_number' => 'string|max:10',
             'color_hex' => 'string|max:10',
-            'vin_code' => ['string', 'max:255', 'unique:stolen_cars,vin_code', new VinCode()], //TODO decide  answer
+            'vin_code' => ['string', 'max:255', new VinCode()], //TODO decide  answer
         ];
     }
 
     public function withValidator($validator)
     {
-        $id = $this->route('id');
+        $validator->after(function ($validator) {
+            $id = $this->route('id');
+            $stolenCar = StolenCar::find($id);
+            $stolenCarByVin = StolenCar::where('vin_code', $this->request->get('vin_code'))->first();
 
-        if(!$id || !StolenCar::whereId($id)->exists()) {
-            $validator->errors()->add('id', 'This record isn exists');
-        }
+            if (!$id || !$stolenCar) {
+                $validator->errors()->add('id', 'This record isn exists');
+            }
+
+            if ($stolenCarByVin && $stolenCarByVin->id !== $id) {
+                $validator->errors()->add('id', 'This vin_code is already exists');
+            }
+        });
     }
 }
