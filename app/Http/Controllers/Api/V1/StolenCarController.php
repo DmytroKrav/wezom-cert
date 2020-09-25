@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\AddCarRequest;
+use App\Http\Requests\Api\V1\UpdateCarRequest;
 use App\Http\Resources\Api\V1\CarResource;
 use App\Http\Resources\Api\V1\StolenCarsResource;
 use App\Models\StolenCar;
@@ -21,6 +22,10 @@ class StolenCarController extends Controller
         $this->model = $model;
     }
 
+    /**
+     * @param Request $request
+     * @return StolenCarsResource
+     */
     public function index(Request $request)
     {
         $result = $this->model::query();
@@ -44,16 +49,42 @@ class StolenCarController extends Controller
         return new StolenCarsResource($result);
     }
 
+    /**
+     * @param AddCarRequest $request
+     * @return CarResource
+     */
     public function store(AddCarRequest $request)
     {
         return CarResource::make($this->model->createNewRecord($request));
     }
 
     /**
+     * @param UpdateCarRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(UpdateCarRequest $request)
+    {
+        StolenCar::find($request->get('id'))->update($request->only('color_hex', 'gov_number', 'vin_code', 'user_name'));
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy(Request $request)
+    {
+        StolenCar::find($request->get('id'))->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * @param  Request  $request
      * @return int
      */
-    protected function getLimit(Request $request): int
+    private function getLimit(Request $request): int
     {
         if ((int) $request->get('per_page') > 0) {
             return (int) $request->get('per_page');
