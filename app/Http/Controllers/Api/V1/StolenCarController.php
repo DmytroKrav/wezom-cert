@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\AddCarRequest;
+use App\Http\Requests\Api\V1\DeleteCarRequest;
 use App\Http\Requests\Api\V1\UpdateCarRequest;
 use App\Http\Resources\Api\V1\CarResource;
 use App\Http\Resources\Api\V1\StolenCarsResource;
@@ -64,18 +65,19 @@ class StolenCarController extends Controller
      */
     public function update(UpdateCarRequest $request)
     {
-        StolenCar::find($request->get('id'))->update($request->only('color_hex', 'gov_number', 'vin_code', 'user_name'));
+        $car = StolenCar::find($request->route('stolen_car'))
+            ->update($request->only('color_hex', 'gov_number', 'vin_code', 'user_name'));
 
-        return response()->json(['success' => true]);
+        return CarResource::make($car);
     }
 
     /**
-     * @param Request $request
+     * @param DeleteCarRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Request $request)
+    public function destroy(DeleteCarRequest $request)
     {
-        StolenCar::find($request->get('id'))->delete();
+        StolenCar::find($request->route('stolen_car'))->delete();
 
         return response()->json(['success' => true]);
     }

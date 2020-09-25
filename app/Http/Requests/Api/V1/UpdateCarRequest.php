@@ -24,7 +24,7 @@ class UpdateCarRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $id = $this->route('id');
+            $id = $this->route('stolen_car');
             $stolenCar = StolenCar::find($id);
             $stolenCarByVin = StolenCar::where('vin_code', $this->request->get('vin_code'))->first();
 
@@ -32,7 +32,7 @@ class UpdateCarRequest extends FormRequest
                 $validator->errors()->add('id', 'This record isn exists');
             }
 
-            if ($stolenCarByVin && $stolenCarByVin->id !== $id) {
+            if ($stolenCarByVin && $stolenCarByVin->id != $id) {
                 $validator->errors()->add('id', 'This vin_code is already exists');
             }
         });
